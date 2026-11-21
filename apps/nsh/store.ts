@@ -1188,6 +1188,12 @@ export function createAppStore() {
         evaluateVoiceToolCall: (call) => opened.evaluateVoiceToolCall(call),
         evaluateVoiceUserTurn: (text) => opened.evaluateVoiceUserTurn(text),
         assembleVoiceTurn: (text) => opened.assembleVoiceTurn(text),
+        lookWithCamera: async (question, facing) => {
+          if (!alive || !runtime) {
+            throw new Error("@looi:runtimeLocalRuntimeIsNotReady");
+          }
+          return runtime.lookWithCamera(question, facing);
+        },
         controlBody: async (actionName, durationMs, extra) => {
           if (!alive || !runtime) {
             throw new Error("@looi:runtimeLocalRuntimeIsNotReady");

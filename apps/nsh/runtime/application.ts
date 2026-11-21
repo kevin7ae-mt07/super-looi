@@ -807,6 +807,82 @@ export class MobileRuntime {
     };
   }
 
+  /**
+   * look_with_camera: take one photo and ask the active chat model (an
+   * OpenAI-compatible vision model such as grok-4.7) about it. Errors are
+   * reported as-is so the voice model never invents what it "saw".
+   */
+  async lookWithCamera(
+    question: string,
+    facing: "front" | "back" = "front",
+  ): Promise<string> {
+    if (this.closed) throw new Error("@looi:runtimeRuntimeClosed");
+    const { baseUrl, model } = this.configuration();
+    const envelope = this.credentialStore.readEnvelope();
+    const providerId = envelope.active?.providerId ?? "custom";
+    const credential = envelope.credentials[providerId];
+    const apiKey =
+      credential && credential.type === "api_key" ? credential.key : "";
+    if (!baseUrl || !model || !apiKey)
+      throw Object.assign(
+        new Error("No chat model with an API key is set up in Models"),
+        { code: "VISION_MODEL_UNCONFIGURED" },
+      );
+    const frame = await this.visionBroker.captureFrame({
+      facing,
+      maxDimension: 640,
+    });
+    const image = Buffer.from(frame.jpeg).toString("base64");
+    const response = await fetch(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 300,
+        temperature: 0.2,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are the eyes of LOOI, a desk robot. Answer the question about the photo in one to three short spoken sentences. Describe only what is actually visible; if you cannot tell, say so.",
+          },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: question },
+              {
+                type: "image_url",
+                image_url: { url: `data:image/jpeg;base64,${image}` },
+              },
+            ],
+          },
+        ],
+      }),
+    });
+    const text = await response.text();
+    if (!response.ok)
+      throw Object.assign(
+        new Error(
+          `Vision request failed (HTTP ${response.status}): ${this.redactSecrets(text).slice(0, 300)}`,
+        ),
+        { code: `VISION_HTTP_${response.status}` },
+      );
+    let answer = "";
+    try {
+      answer = String(JSON.parse(text)?.choices?.[0]?.message?.content ?? "").trim();
+    } catch {
+      answer = "";
+    }
+    if (!answer)
+      throw Object.assign(new Error("The vision model returned no description"), {
+        code: "VISION_EMPTY",
+      });
+    return answer;
+  }
+
   taskPage(offset = 0) {
     if (this.closed) throw new Error("@looi:runtimeRuntimeClosed");
     if (!Number.isSafeInteger(offset) || offset < 0)

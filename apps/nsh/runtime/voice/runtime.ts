@@ -446,6 +446,7 @@ export class VoiceRuntime {
         this.options.onConversationActivity?.();
       },
       controlBody: this.options.controlBody,
+      lookWithCamera: this.options.lookWithCamera,
       stopVoiceMotion: this.options.stopVoiceMotion,
       redactSecrets: this.options.redactSecrets,
       onStatePatch: (patch) => {

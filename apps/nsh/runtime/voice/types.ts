@@ -132,6 +132,8 @@ export interface VoiceRuntimeOptions {
   requestTask?: (prompt: string, traceContext?: TraceContext) => Promise<string>;
   /** Detached task bridge acknowledging submissions before execution finishes. */
   taskBridge?: VoiceTaskBridge;
+  /** One camera photo answered by the chat model (look_with_camera tool). */
+  lookWithCamera?: (question: string, facing: "front" | "back") => Promise<string>;
   controlBody?: (
     action: string,
     durationMs?: number,

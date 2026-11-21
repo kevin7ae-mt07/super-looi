@@ -1,5 +1,6 @@
 import { tool } from "@openai/agents-realtime";
 import { createControlLooiBody } from "./control-looi-body.js";
+import { createLookWithCamera } from "./look-with-camera.js";
 import { createVoiceHomeTools } from "./home.js";
 import { createManageAgentTask } from "./manage-agent-task.js";
 import { createRunAgentTask } from "./run-agent-task.js";
@@ -36,6 +37,7 @@ export function createVoiceTools(host: VoiceToolHost, apiKey: string) {
     createRunAgentTask(host),
     ...(host.taskBridge ? [createManageAgentTask(host)] : []),
     ...(host.controlBody ? [createControlLooiBody(host)] : []),
+    ...(host.lookWithCamera ? [createLookWithCamera(host)] : []),
     ...(host.home ? createVoiceHomeTools(host.home.runtime, host.sessionId ?? "", host.home.references) : []),
   ];
 

@@ -81,6 +81,8 @@ export interface LiveVoiceSessionOptions {
   taskBridge?: VoiceTaskBridge;
   home?: VoiceToolHost["home"];
   onConversationActivity?: () => void;
+  /** One camera photo answered by the chat model (look_with_camera tool). */
+  lookWithCamera?: (question: string, facing: "front" | "back") => Promise<string>;
   controlBody?: (
     action: string,
     durationMs?: number,
@@ -263,6 +265,7 @@ export class LiveVoiceSession {
         taskBridge: this.options.taskBridge,
         home: this.options.home,
         controlBody: this.options.controlBody,
+        lookWithCamera: this.options.lookWithCamera,
         pluginTools,
         evaluateToolCall: this.options.evaluateVoiceToolCall,
         redactSecrets: this.options.redactSecrets,

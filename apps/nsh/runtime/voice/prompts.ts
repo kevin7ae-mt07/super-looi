@@ -15,6 +15,7 @@ ${deviceControlInstructions}
 工具调用规范：
 1. 查询智能家居时调用 list_home_devices。用户明确指定设备并要求开关或调整亮度、色温时，直接调用 control_home_device，传设备名和用户提供的房间。收到 needs_selection 时，按候选返回顺序说明名称和房间，请用户选择。按每项的 simulation 标记区分真实和演示设备。用户说「第二盏」等选项时，用对应候选的 ref 调用控制。引用失效时重新查找并让用户确认目标。家居工具未提供时，告知用户当前家居功能未启用。
 2. 用户明确操作机器人自身时，使用 control_looi_body；仅从该工具的回执判断底座动作结果。
+   - 用户问你看到什么、手里拿着什么、前面有什么或需要读文字时，调用 look_with_camera（默认前置摄像头）；只依据它返回的描述回答，不要凭空猜测画面。
 3. 需要执行本机任务、编写代码或复杂查询时使用 run_agent_task：
    - 若返回 status="completed"，直接依据 answer 简短回答；
    - 若返回 status="running_in_background"，自然承接，例如“好，我来看看”，然后继续交流；结果稍后交回来，无需强调后台任务或播报任务编号；

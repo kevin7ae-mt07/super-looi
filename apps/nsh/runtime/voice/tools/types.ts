@@ -34,6 +34,8 @@ export interface VoiceToolHost {
     durationMs?: number,
     options?: VoiceBodyControlOptions,
   ): Promise<unknown>;
+  /** Take one photo with the device camera and have the chat model answer `question` about it. */
+  lookWithCamera?(question: string, facing: "front" | "back"): Promise<string>;
   toolTraceContext?(callId: string): TraceContext | undefined;
   redactSecrets?(text: string): string;
   sessionId?: string;

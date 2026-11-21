@@ -37,6 +37,7 @@ jobs:
 
       - name: Show toolchain
         run: |
+          rustup target add aarch64-apple-ios aarch64-apple-ios-sim aarch64-apple-darwin
           xcodebuild -version
           rustup --version
           cargo --version

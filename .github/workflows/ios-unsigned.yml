@@ -4,6 +4,15 @@ name: iOS unsigned build
 # signed and installed from Windows with a sideloading tool (e.g. Sideloadly).
 on:
   workflow_dispatch:
+    inputs:
+      voice:
+        description: "Live voice backend baked into the app"
+        type: choice
+        default: own-server
+        options:
+          - own-server   # VOICE_* repo secrets (your realtime server)
+          - xai          # xAI Grok voice: wss://api.x.ai/v1/realtime, grok-voice-latest
+          - openai       # api.openai.com realtime
   push:
     branches: [main]
     paths:
@@ -58,12 +67,21 @@ jobs:
       - name: Package unsigned iOS app
         working-directory: apps/nsh
         env:
-          # Optional: point live voice at your own realtime server (kept in repo secrets).
-          VOICE_PROVIDER: ${{ secrets.VOICE_PROVIDER }}
-          VOICE_BASE_URL: ${{ secrets.VOICE_BASE_URL }}
-          VOICE_MODEL: ${{ secrets.VOICE_MODEL }}
+          VOICE_CHOICE: ${{ inputs.voice || 'own-server' }}
+          # Your own realtime server, kept in repo secrets.
+          SECRET_VOICE_PROVIDER: ${{ secrets.VOICE_PROVIDER }}
+          SECRET_VOICE_BASE_URL: ${{ secrets.VOICE_BASE_URL }}
+          SECRET_VOICE_MODEL: ${{ secrets.VOICE_MODEL }}
         run: |
-          echo "Custom voice server: $([ -n "$VOICE_BASE_URL" ] && echo yes || echo no)"
+          case "$VOICE_CHOICE" in
+            xai)
+              export VOICE_PROVIDER=openai VOICE_BASE_URL=wss://api.x.ai/v1/realtime VOICE_MODEL=grok-voice-latest ;;
+            openai)
+              export VOICE_PROVIDER=openai VOICE_BASE_URL= VOICE_MODEL= ;;
+            *)
+              export VOICE_PROVIDER="$SECRET_VOICE_PROVIDER" VOICE_BASE_URL="$SECRET_VOICE_BASE_URL" VOICE_MODEL="$SECRET_VOICE_MODEL" ;;
+          esac
+          echo "Voice backend: $VOICE_CHOICE (custom URL: $([ -n "$VOICE_BASE_URL" ] && echo yes || echo no))"
           node --import tsx scripts/nsh.ts package --target ios
 
       - name: Check iOS permission descriptions
@@ -86,6 +104,6 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SuperLOOI-unsigned-ipa
+          name: SuperLOOI-unsigned-ipa-${{ inputs.voice || 'own-server' }}
           path: SuperLOOI-unsigned.ipa
           retention-days: 30

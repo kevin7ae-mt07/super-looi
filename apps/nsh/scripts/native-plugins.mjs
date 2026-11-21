@@ -174,6 +174,10 @@ export function patchIosApp(target) {
   cpSync(join(app,"native/licenses/xiaomi-camera"),join(target,"ThirdPartyLicenses/XiaomiCamera"),{recursive:true});
   run("plutil", ["-replace", "NSLocalNetworkUsageDescription", "-string", config.ios.localNetworkUsageDescription, plist]);
   run("plutil", ["-replace", "NSCameraUsageDescription", "-string", config.ios.cameraUsageDescription, plist]);
+  // Without this key iOS never shows the Bluetooth prompt and blocks dock scanning.
+  const bluetoothUsage = config.ios.bluetoothUsageDescription ?? "Super LOOI uses Bluetooth to find and connect to your LOOI dock.";
+  run("plutil", ["-replace", "NSBluetoothAlwaysUsageDescription", "-string", bluetoothUsage, plist]);
+  run("plutil", ["-replace", "NSBluetoothPeripheralUsageDescription", "-string", bluetoothUsage, plist]);
   const orientations = [
     "UIInterfaceOrientationLandscapeLeft",
     "UIInterfaceOrientationLandscapeRight",

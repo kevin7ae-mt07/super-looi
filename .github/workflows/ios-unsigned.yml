@@ -58,6 +58,14 @@ jobs:
         working-directory: apps/nsh
         run: node --import tsx scripts/nsh.ts package --target ios
 
+      - name: Check iOS permission descriptions
+        working-directory: apps/nsh/.nsh/out
+        run: |
+          PLIST="$(ls -d *.app | head -1)/Info.plist"
+          for key in NSBluetoothAlwaysUsageDescription NSMicrophoneUsageDescription NSCameraUsageDescription; do
+            /usr/libexec/PlistBuddy -c "Print :$key" "$PLIST" || { echo "Missing $key"; exit 1; }
+          done
+
       - name: Make .ipa
         working-directory: apps/nsh/.nsh/out
         run: |

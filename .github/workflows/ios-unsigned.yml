@@ -57,7 +57,14 @@ jobs:
 
       - name: Package unsigned iOS app
         working-directory: apps/nsh
-        run: node --import tsx scripts/nsh.ts package --target ios
+        env:
+          # Optional: point live voice at your own realtime server (kept in repo secrets).
+          VOICE_PROVIDER: ${{ secrets.VOICE_PROVIDER }}
+          VOICE_BASE_URL: ${{ secrets.VOICE_BASE_URL }}
+          VOICE_MODEL: ${{ secrets.VOICE_MODEL }}
+        run: |
+          echo "Custom voice server: $([ -n "$VOICE_BASE_URL" ] && echo yes || echo no)"
+          node --import tsx scripts/nsh.ts package --target ios
 
       - name: Check iOS permission descriptions
         working-directory: apps/nsh/.nsh/out

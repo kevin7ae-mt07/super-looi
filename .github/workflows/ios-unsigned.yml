@@ -26,6 +26,15 @@ jobs:
           corepack prepare pnpm@9.15.9 --activate
           pnpm --version
 
+      - name: Install iSH (Linux shell) build tools
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+          HOMEBREW_NO_INSTALL_CLEANUP: "1"
+        run: |
+          brew install meson ninja lld llvm libarchive
+          which meson ninja
+          ls /opt/homebrew/opt/lld/bin/ld.lld /opt/homebrew/opt/llvm/bin/clang /opt/homebrew/opt/libarchive/lib/libarchive.dylib
+
       - name: Show toolchain
         run: |
           xcodebuild -version

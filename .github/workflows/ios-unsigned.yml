@@ -1,0 +1,66 @@
+name: iOS unsigned build
+
+# Builds an unsigned Super LOOI.ipa on a GitHub macOS runner so it can be
+# signed and installed from Windows with a sideloading tool (e.g. Sideloadly).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/ios-unsigned.yml"
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.9 --activate
+          pnpm --version
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          rustup --version
+          cargo --version
+
+      - name: Cache NSH, sherpa-onnx and cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/super-looi
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ios-${{ runner.os }}-${{ hashFiles('apps/nsh/scripts/nsh.ts', 'apps/nsh/scripts/prepare-*.mjs') }}
+          restore-keys: ios-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Package unsigned iOS app
+        working-directory: apps/nsh
+        run: node --import tsx scripts/nsh.ts package --target ios
+
+      - name: Make .ipa
+        working-directory: apps/nsh/.nsh/out
+        run: |
+          ls -la
+          APP="$(ls -d *.app | head -1)"
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          zip -qry ../../../../SuperLOOI-unsigned.ipa Payload
+          ls -la ../../../../SuperLOOI-unsigned.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SuperLOOI-unsigned-ipa
+          path: SuperLOOI-unsigned.ipa
+          retention-days: 30
